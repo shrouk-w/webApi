@@ -1,5 +1,7 @@
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
+using WebApplication1.Repositories;
+using WebApplication1.Services;
 
 namespace WebApplication1;
 
@@ -12,6 +14,11 @@ public class Program
         // Add services to the container.
         builder.Services.AddAuthorization();
         builder.Services.AddControllers();
+        
+        //registering dependencies
+        builder.Services.AddScoped<ITripsService, TripsService>();
+        builder.Services.AddScoped<ITripsRepository, TripsRepository>();
+        
 
         builder.Services.AddSwaggerGen(c =>
         {

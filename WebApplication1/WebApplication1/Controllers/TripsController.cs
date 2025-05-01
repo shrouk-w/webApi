@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using WebApplication1.Repositories;
+using WebApplication1.Services;
 
 namespace WebApplication1.Controllers;
 
@@ -6,11 +8,15 @@ namespace WebApplication1.Controllers;
 [Route("api/[controller]")]
 public class TripsController: ControllerBase
 {
-
+    private readonly ITripsService _tripsService;
+    public TripsController(ITripsService tripsService)
+    {
+        _tripsService = tripsService;
+    }
+    
     [HttpGet]
     public async Task<IActionResult> GetTripsAsync()
     {
-
         return Ok();
     }
     
