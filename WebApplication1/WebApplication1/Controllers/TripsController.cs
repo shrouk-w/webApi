@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using WebApplication1.Repositories;
 using WebApplication1.Services;
 
 namespace WebApplication1.Controllers;
@@ -15,9 +14,10 @@ public class TripsController: ControllerBase
     }
     
     [HttpGet]
-    public async Task<IActionResult> GetTripsAsync()
+    public async Task<IActionResult> GetTripsAsync(CancellationToken cancellationToken)
     {
-        return Ok();
+        var trips = await _tripsService.GetTripsAsync(cancellationToken);
+        return Ok(trips);
     }
     
     

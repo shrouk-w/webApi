@@ -4,5 +4,5 @@ namespace WebApplication1.Repositories;
 
 public interface ITripsRepository
 {
-    Task<IEnumerable<Trip>> GetTripsAsync();
+    Task<IEnumerable<Trip>> GetTripsAsync(CancellationToken cancellationToken);
 }
