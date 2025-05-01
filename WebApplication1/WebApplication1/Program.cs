@@ -19,6 +19,8 @@ public class Program
         //registering dependencies
         builder.Services.AddScoped<ITripsService, TripsService>();
         builder.Services.AddScoped<ITripsRepository, TripsRepository>();
+        builder.Services.AddScoped<IClientsService, ClientsService>();
+        builder.Services.AddScoped<IClientsRepository, ClientsRepository>();
         
 
         builder.Services.AddSwaggerGen(c =>
