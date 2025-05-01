@@ -1,5 +1,6 @@
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
+using WebApplication1.Middlewares;
 using WebApplication1.Repositories;
 using WebApplication1.Services;
 
@@ -51,6 +52,8 @@ public class Program
         {
             app.MapOpenApi();
         }
+
+        app.UseGlobalExceptionHandling();
         
         app.UseSwagger();
         
