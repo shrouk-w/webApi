@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using WebApplication1.Exceptions;
 
 namespace WebApplication1.Middlewares;
 
@@ -29,7 +30,14 @@ public class GlobalExceptionHandlingMiddleware
     private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         context.Response.ContentType = "application/json";
-        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.StatusCode = exception switch
+        {
+            BadRequestException => StatusCodes.Status400BadRequest,
+            NotFoundException => StatusCodes.Status404NotFound,
+            ConflictException => StatusCodes.Status409Conflict,
+            NotImplementedException => StatusCodes.Status501NotImplemented,
+            _ => StatusCodes.Status500InternalServerError
+        };
 
         var response = new
         {

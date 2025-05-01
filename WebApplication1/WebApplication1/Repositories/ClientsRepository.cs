@@ -1,4 +1,5 @@
 ﻿using Microsoft.Data.SqlClient;
+using WebApplication1.Exceptions;
 using WebApplication1.Models;
 
 namespace WebApplication1.Repositories;
@@ -66,6 +67,9 @@ public class ClientsRepository: IClientsRepository
             }
             
         }
+        
+        if(trips.Count<1)
+            throw new NotFoundException("client with id: " + id + " is not assigned to any trips");
 
         return trips;
     }
