@@ -71,5 +71,12 @@ public class ClientsService: IClientsService
 
         await _clientsRepository.AssignClientToTripAsync(id, tripId, currDate, null, cancellationToken);
     }
+
+    public async Task DeleteClientToTripAssignmentAsync(int id, int tripId, CancellationToken cancellationToken)
+    {
+        if(! await _clientsRepository.DoesClientTripAssignmentExist(id, tripId,cancellationToken))
+            throw new ConflictException("client id: "+id+", trip id: "+tripId+" arent assigned to eachother");
+        await _clientsRepository.DeleteClientToTripAssignmentAsync(id, tripId, cancellationToken);
+    }
 }
 

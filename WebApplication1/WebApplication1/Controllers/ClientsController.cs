@@ -39,4 +39,11 @@ public class ClientsController: ControllerBase
         await _clientsService.AssignClientToTripAsync(id, tripId, cancellationToken);
         return Created($"/api/clients/{id}/trips/{tripId}", new { ClientsId = id, TripId = tripId });
     }
+
+    [HttpDelete("{id}/trips/{tripId}")]
+    public async Task<IActionResult> DeleteClientToTripAssignmentAsync(int id, int tripId, CancellationToken cancellationToken)
+    {
+        await _clientsService.DeleteClientToTripAssignmentAsync(id, tripId, cancellationToken);
+        return NoContent();
+    }
 }

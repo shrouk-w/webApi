@@ -13,4 +13,5 @@ public interface IClientsRepository
     Task<int> HowManyPeopleAreAssignedToTripAsync(int TripId, CancellationToken cancellationToken);
     Task<int> MaxPeopleOnTrip(int TripId, CancellationToken cancellationToken);
     Task AssignClientToTripAsync(int id, int tripId,int registrationDate, int? paymentDate , CancellationToken cancellationToken);
+    Task DeleteClientToTripAssignmentAsync(int id, int tripId, CancellationToken cancellationToken);
 }

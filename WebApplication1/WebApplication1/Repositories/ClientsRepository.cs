@@ -259,4 +259,30 @@ public class ClientsRepository: IClientsRepository
         }
     }
 
+    public async Task DeleteClientToTripAssignmentAsync(int id, int tripId, CancellationToken cancellationToken)
+    {
+        
+        await using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync(cancellationToken);
+
+            var query = @"
+                        DELETE FROM [dbo].[Client_Trip]
+                        WHERE 
+                            [dbo].[Client_Trip].[iDClient] = @IdClient AND
+                            [dbo].[Client_Trip].[IdTrip] = @IdTrip";
+            await using (var command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@IdClient", id);
+                command.Parameters.AddWithValue("@IdTrip", tripId);
+                
+                var num = await command.ExecuteNonQueryAsync(cancellationToken);
+
+                if (!(num > 0))
+                {
+                    throw new Exception("0 rows affected, data base didnt remove any records");
+                }
+            }
+        }
+    }
 }
