@@ -30,6 +30,13 @@ public class ClientsController: ControllerBase
     public async Task<IActionResult> CreateNewClientAsync([FromBody] CreateClientDTO dto, CancellationToken cancellationToken)
     {
         var clientsid = await _clientsService.CreateNewClientAsync(dto, cancellationToken);
-        return Created($"/api/clients", new { clientsid = clientsid});
+        return Created($"/api/clients", new { ClientsId = clientsid});
+    }
+
+    [HttpPut("{id}/trips/{tripId}")]
+    public async Task<IActionResult> AssignClientToTripAsync(int id, int tripId, CancellationToken cancellationToken)
+    {
+        await _clientsService.AssignClientToTripAsync(id, tripId, cancellationToken);
+        return Created($"/api/clients/{id}/trips/{tripId}", new { ClientsId = id, TripId = tripId });
     }
 }

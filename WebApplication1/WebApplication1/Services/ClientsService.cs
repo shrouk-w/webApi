@@ -18,11 +18,18 @@ public class ClientsService: IClientsService
         if(id<0)
             throw new BadRequestException("id must be greater than 0");
         
+        if(!await _clientsRepository.DoesClientExistAsync(id, cancellationToken))
+            throw new NotFoundException("client with id: "+id+" doesnt exist");
+        
         return await _clientsRepository.GetTripsForClientAsync(id, cancellationToken);
     }
 
     public async Task<int> CreateNewClientAsync(CreateClientDTO dto, CancellationToken cancellationToken)
     {
+        if (await _clientsRepository.DoesPeselExistAsync(dto.Pesel, cancellationToken))
+        {
+            throw new ConflictException("client with this pesel already exists");
+        }
         
         var client = new Client()
         {
@@ -34,6 +41,35 @@ public class ClientsService: IClientsService
         };
         
         return await _clientsRepository.CreateNewClientAsync(client, cancellationToken);
+    }
+
+    public async Task AssignClientToTripAsync(int id, int tripId, CancellationToken cancellationToken)
+    {
+        if(id<0)
+            throw new BadRequestException("clients id must be greater than 0");
+        
+        if(tripId<0)
+            throw new BadRequestException("trip id must be greater than 0");
+        
+        if(!await _clientsRepository.DoesClientExistAsync(id, cancellationToken))
+            throw new NotFoundException("client with id: "+id+" doesnt exist");
+        
+        if(!await _clientsRepository.DoesTripExistAsync(tripId, cancellationToken))
+            throw new NotFoundException("trip with id: "+tripId+" doesnt exist");
+        
+        if(await _clientsRepository.DoesClientTripAssignmentExist(id, tripId,cancellationToken))
+            throw new ConflictException("client id: "+id+", trip id: "+tripId+" are already assigned to eachother");
+        
+        var alreadyassignednumber = await _clientsRepository.HowManyPeopleAreAssignedToTripAsync(tripId, cancellationToken);
+        
+        var maxpeople = await _clientsRepository.MaxPeopleOnTrip(tripId, cancellationToken);
+        
+        if(alreadyassignednumber>=maxpeople)
+            throw new ConflictException("trip id: "+tripId+" is already at its full capacity");
+        
+        var currDate = int.Parse(DateTime.Now.ToString("yyyyMMdd"));
+
+        await _clientsRepository.AssignClientToTripAsync(id, tripId, currDate, null, cancellationToken);
     }
 }
 

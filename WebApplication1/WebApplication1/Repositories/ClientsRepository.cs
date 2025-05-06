@@ -76,11 +76,6 @@ public class ClientsRepository: IClientsRepository
 
     public async Task<int> CreateNewClientAsync(Client client, CancellationToken cancellationToken)
     {
-        if (await DoesPeselExistAsync(client.Pesel, cancellationToken))
-        {
-            throw new ConflictException("client with this pesel already exists");
-        }
-        
         await using (var connection = new SqlConnection(_connectionString))
         {
             await connection.OpenAsync(cancellationToken);
@@ -114,7 +109,7 @@ public class ClientsRepository: IClientsRepository
             
             await connection.OpenAsync(cancellationToken);
 
-            var query = "SELECT COUNT(1) FROM [dbo].[Client] WHERE Pesel = @pesel";
+            var query = @"SELECT COUNT(1) FROM [dbo].[Client] WHERE Pesel = @pesel";
             
             await using (var command = new SqlCommand(query, connection)){
                 command.Parameters.AddWithValue("@pesel", pesel);
@@ -126,4 +121,142 @@ public class ClientsRepository: IClientsRepository
         }
         
     }
+    
+    public async Task<bool> DoesClientExistAsync(int id, CancellationToken cancellationToken)
+    {
+        await using (var connection = new SqlConnection(_connectionString)){
+            
+            await connection.OpenAsync(cancellationToken);
+
+            var query = @"SELECT COUNT(1) FROM [dbo].[Client] WHERE IdClient = @id";
+            
+            await using (var command = new SqlCommand(query, connection)){
+                command.Parameters.AddWithValue("@id", id);
+                
+                var result = await command.ExecuteScalarAsync(cancellationToken);
+                
+                return Convert.ToInt32(result) > 0;
+            }
+        }
+    }
+    
+    public async Task<bool> DoesTripExistAsync(int id, CancellationToken cancellationToken)
+    {
+        await using (var connection = new SqlConnection(_connectionString)){
+            
+            await connection.OpenAsync(cancellationToken);
+
+            var query = @"SELECT COUNT(1) FROM [dbo].[Trip] WHERE IdTrip = @id";
+            
+            await using (var command = new SqlCommand(query, connection)){
+                command.Parameters.AddWithValue("@id", id);
+                
+                var result = await command.ExecuteScalarAsync(cancellationToken);
+                
+                return Convert.ToInt32(result) > 0;
+            }
+        }
+    }
+    
+    public async Task<bool> DoesClientTripAssignmentExist(int ClientId, int TripId, CancellationToken cancellationToken)
+    {
+        await using (var connection = new SqlConnection(_connectionString)){
+            
+            await connection.OpenAsync(cancellationToken);
+
+            var query = @"SELECT COUNT(1) FROM [dbo].[Client_Trip] WHERE IdTrip = @TripId AND IdClient = @ClientId";
+            
+            await using (var command = new SqlCommand(query, connection)){
+                command.Parameters.AddWithValue("@TripId", TripId);
+                command.Parameters.AddWithValue("@ClientId", ClientId);
+                
+                var result = await command.ExecuteScalarAsync(cancellationToken);
+                
+                return Convert.ToInt32(result) > 0;
+            }
+        }
+    }
+    
+    public async Task<int> HowManyPeopleAreAssignedToTripAsync(int TripId, CancellationToken cancellationToken)
+    {
+        await using (var connection = new SqlConnection(_connectionString)){
+            
+            await connection.OpenAsync(cancellationToken);
+
+            var query = @"
+                        SELECT IdTrip, COUNT(IdClient) AS number
+                        FROM [dbo].[Client_Trip] 
+                        GROUP BY IdTrip
+                        HAVING IdTrip = @TripId";
+            
+            await using (var command = new SqlCommand(query, connection)){
+                command.Parameters.AddWithValue("@TripId", TripId);
+                
+                await using (var reader = await command.ExecuteReaderAsync(cancellationToken))
+                {
+                    var num = 0;
+
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        num = reader.GetInt32(reader.GetOrdinal("number"));
+                        
+                    }
+                    return num;
+                }
+            }
+        }
+    }
+    
+    
+    public async Task<int> MaxPeopleOnTrip(int TripId, CancellationToken cancellationToken)
+    {
+        await using (var connection = new SqlConnection(_connectionString)){
+            
+            await connection.OpenAsync(cancellationToken);
+
+            var query = @"
+                        SELECT MaxPeople
+                        FROM [dbo].[Trip] 
+                        Where IdTrip = @TripId";
+            
+            await using (var command = new SqlCommand(query, connection)){
+                command.Parameters.AddWithValue("@TripId", TripId);
+                
+                var result = await command.ExecuteScalarAsync(cancellationToken);
+                
+                return Convert.ToInt32(result);
+            }
+        }
+    }
+
+    public async Task AssignClientToTripAsync(int id, int tripId,int registrationDate, int? paymentDate , CancellationToken cancellationToken)
+    {
+        await using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync(cancellationToken);
+
+            var query = @"
+                        INSERT INTO [dbo].[Client_Trip]
+                        ([IdClient], [IdTrip], [RegisteredAt], [PaymentDate]) 
+                        VALUES
+                            (@IdClient, @IdTrip, @RegisteredAt, @PaymentDate)";
+            await using (var command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@IdClient", id);
+                command.Parameters.AddWithValue("@IdTrip", tripId);
+                command.Parameters.AddWithValue("@RegisteredAt", registrationDate);
+                command.Parameters.AddWithValue("@PaymentDate", paymentDate.HasValue ? paymentDate.Value : (object)DBNull.Value);
+
+                
+
+                var num = await command.ExecuteNonQueryAsync(cancellationToken);
+
+                if (!(num > 0))
+                {
+                    throw new Exception("0 rows affected, data base didnt add new assignment");
+                }
+            }
+        }
+    }
+
 }
