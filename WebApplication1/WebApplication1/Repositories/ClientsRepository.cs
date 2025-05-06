@@ -13,9 +13,9 @@ public class ClientsRepository: IClientsRepository
         _connectionString = configuration.GetConnectionString("DefaultConnection");
     }
 
-    public async Task<IEnumerable<TripForClient>> GetTripsForClientAsync(int id, CancellationToken cancellationToken)
+    public async Task<IEnumerable<TripForClientDTO>> GetTripsForClientAsync(int id, CancellationToken cancellationToken)
     {
-        var trips = new List<TripForClient>();
+        var trips = new List<TripForClientDTO>();
 
         await using (var connection = new SqlConnection(_connectionString))
         {
@@ -44,7 +44,7 @@ public class ClientsRepository: IClientsRepository
 
                     while (await reader.ReadAsync(cancellationToken))
                     {
-                        var trip = new TripForClient()
+                        var trip = new TripForClientDTO()
                         {
                             IdTrip = reader.GetInt32(reader.GetOrdinal("IdTrip")),
                             Name = reader.GetString(reader.GetOrdinal("Name")),
@@ -72,5 +72,58 @@ public class ClientsRepository: IClientsRepository
             throw new NotFoundException("client with id: " + id + " is not assigned to any trips");
 
         return trips;
+    }
+
+    public async Task<int> CreateNewClientAsync(Client client, CancellationToken cancellationToken)
+    {
+        if (await DoesPeselExistAsync(client.Pesel, cancellationToken))
+        {
+            throw new ConflictException("client with this pesel already exists");
+        }
+        
+        await using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync(cancellationToken);
+
+            var query = @"
+                        INSERT INTO [dbo].[Client]
+                        ([FirstName], [LastName], [Email], [Telephone], [Pesel]) 
+                        OUTPUT INSERTED.IdClient
+                        VALUES
+                            (@FirstName, @LastName, @Email, @Telephone, @Pesel)";
+            await using (var command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@FirstName", client.FristName);
+                command.Parameters.AddWithValue("@LastName", client.LastName);
+                command.Parameters.AddWithValue("@Email", client.Email);
+                command.Parameters.AddWithValue("@Telephone", client.Telephone);
+                command.Parameters.AddWithValue("@Pesel", client.Pesel);
+                
+                var insertedid = await command.ExecuteScalarAsync(cancellationToken);
+                
+                return Convert.ToInt32(insertedid);
+            }
+        }
+    }
+    
+    
+    public async Task<bool> DoesPeselExistAsync(string pesel, CancellationToken cancellationToken)
+    {
+        
+        await using (var connection = new SqlConnection(_connectionString)){
+            
+            await connection.OpenAsync(cancellationToken);
+
+            var query = "SELECT COUNT(1) FROM [dbo].[Client] WHERE Pesel = @pesel";
+            
+            await using (var command = new SqlCommand(query, connection)){
+                command.Parameters.AddWithValue("@pesel", pesel);
+                
+                var result = await command.ExecuteScalarAsync(cancellationToken);
+                
+                return Convert.ToInt32(result) > 0;
+            }
+        }
+        
     }
 }

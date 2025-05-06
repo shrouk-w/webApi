@@ -12,9 +12,9 @@ public class TripsRepository: ITripsRepository
         _connectionString = configuration.GetConnectionString("DefaultConnection");
     }
 
-    public async Task<IEnumerable<Trip>> GetTripsAsync(CancellationToken cancellationToken)
+    public async Task<IEnumerable<TripDTO>> GetTripsAsync(CancellationToken cancellationToken)
     {
-        var trips = new List<Trip>();
+        var trips = new List<TripDTO>();
 
         await using (var connection = new SqlConnection(_connectionString))
         {
@@ -54,7 +54,7 @@ public class TripsRepository: ITripsRepository
                         }
                         else
                         {
-                            var trip = new Trip
+                            var trip = new TripDTO
                             {
                                 IdTrip = id,
                                 Name = reader.GetString(reader.GetOrdinal("Name")),

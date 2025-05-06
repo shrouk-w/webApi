@@ -1,6 +1,6 @@
 ﻿namespace WebApplication1.Models;
 
-public class Trip
+public class TripForClientDTO
 {
     public int IdTrip { get; set; }
     public string Name { get; set; }
@@ -8,5 +8,7 @@ public class Trip
     public DateTime DateFrom { get; set; }
     public DateTime DateTo { get; set; }
     public int MaxPeople { get; set; }
-    public List<Country> Country { get; set; }
+    public int IdClient { get; set; }
+    public int RegisteredAt { get; set; }
+    public int PaymentDate { get; set; }
 }

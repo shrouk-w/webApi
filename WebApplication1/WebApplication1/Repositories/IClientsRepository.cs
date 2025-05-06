@@ -4,5 +4,6 @@ namespace WebApplication1.Repositories;
 
 public interface IClientsRepository
 {
-    Task<IEnumerable<TripForClient>> GetTripsForClientAsync(int id, CancellationToken cancellationToken);
+    Task<IEnumerable<TripForClientDTO>> GetTripsForClientAsync(int id, CancellationToken cancellationToken);
+    Task<int> CreateNewClientAsync(Client client, CancellationToken cancellationToken);
 }

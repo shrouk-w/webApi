@@ -11,7 +11,7 @@ public class TripsService: ITripsService
         _repository = repository;
     }
 
-    public async Task<IEnumerable<Trip>> GetTripsAsync(CancellationToken cancellationToken)
+    public async Task<IEnumerable<TripDTO>> GetTripsAsync(CancellationToken cancellationToken)
     {
         return await _repository.GetTripsAsync(cancellationToken);
     }
